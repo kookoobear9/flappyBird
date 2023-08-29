@@ -1,0 +1,20 @@
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+}
+
+#gameContainer {
+    position: relative;
+    width: 800px; /* Set the width to match your canvas dimensions */
+    height: 600px; /* Set the height to match your canvas dimensions */
+    background-image: url('background.jpg'); /* Replace with your background image's URL */
+    background-size: cover; /* Adjust to your preference */
+}
+
+.gameCanvas {
+    border: 1px solid #000;
+}
