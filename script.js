@@ -4,8 +4,9 @@ const ctx = canvas.getContext("2d");
 // Responsive canvas setup
 function resizeCanvas() {
     const container = document.getElementById('gameContainer');
-    const maxWidth = Math.min(window.innerWidth - 20, 800);
-    const maxHeight = Math.min(window.innerHeight - 20, 600);
+    const padding = 10;
+    const maxWidth = Math.min(window.innerWidth - padding, 800);
+    const maxHeight = Math.min(window.innerHeight - padding, 600);
     
     // Maintain 4:3 aspect ratio
     const aspectRatio = 4/3;
@@ -17,12 +18,20 @@ function resizeCanvas() {
         width = height * aspectRatio;
     }
     
+    // Set actual canvas dimensions
     canvas.width = width;
     canvas.height = height;
+    
+    // Set CSS dimensions to match
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
     container.style.width = width + 'px';
     container.style.height = height + 'px';
+    
+    // Reset bird position after resize
+    if (typeof resetBirdPosition === 'function') {
+        resetBirdPosition();
+    }
 }
 
 // Initial canvas setup
@@ -232,8 +241,9 @@ function resetBirdPosition() {
     bird.y = canvas.height / 2;
     bird.width = Math.max(canvas.width * 0.05, 20);
     bird.height = Math.max(canvas.height * 0.05, 15);
-    bird.gravity = Math.max(canvas.height * 0.0015, 0.5);
-    bird.jumpStrength = -Math.max(canvas.height * 0.018, 8);
+    // Easier starting physics
+    bird.gravity = Math.max(canvas.height * 0.001, 0.3);
+    bird.jumpStrength = -Math.max(canvas.height * 0.015, 6);
 }
 
 function restartGame() {
@@ -270,17 +280,51 @@ document.addEventListener("keydown", event => {
     }
 });
 
-// Mouse/Touch controls
-canvas.addEventListener("click", handleInput);
-canvas.addEventListener("touchstart", (event) => {
-    event.preventDefault();
-    handleInput();
-});
+// Input controls setup
+function setupControls() {
+    // Mouse/Touch controls - improved mobile support
+    canvas.addEventListener("click", handleInput);
+    
+    // Touch events with better mobile compatibility
+    canvas.addEventListener("touchstart", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        handleInput();
+    }, { passive: false });
+    
+    // Add touch controls to the entire game container
+    const container = document.getElementById('gameContainer');
+    container.addEventListener("touchstart", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        handleInput();
+    }, { passive: false });
+    
+    // Prevent page scrolling when touching game area
+    container.addEventListener("touchmove", (event) => {
+        event.preventDefault();
+    }, { passive: false });
+    
+    container.addEventListener("touchend", (event) => {
+        event.preventDefault();
+    }, { passive: false });
+}
 
 
 
 // Initialize game
-resetBirdPosition();
-generatePipes();
-displayScore();
-gameLoop();
+function initializeGame() {
+    resizeCanvas();
+    resetBirdPosition();
+    setupControls();
+    generatePipes();
+    displayScore();
+    gameLoop();
+}
+
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeGame);
+} else {
+    initializeGame();
+}
