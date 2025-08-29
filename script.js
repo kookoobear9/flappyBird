@@ -227,8 +227,12 @@ function gameOver() {
 }
 
 function renderBird() {
-    ctx.fillStyle = "yellow";
-    ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+    // Render as a square box instead of rectangular bird
+    ctx.fillStyle = "#FFD700";
+    ctx.strokeStyle = "#FF6B35";
+    ctx.lineWidth = 2;
+    ctx.fillRect(bird.x, bird.y, bird.width, bird.width); // Make it square
+    ctx.strokeRect(bird.x, bird.y, bird.width, bird.width);
 }
 
 function renderPipe(pipe) {
@@ -333,14 +337,15 @@ function displayGameOver() {
 function resetBirdPosition() {
     if (typeof bird === 'undefined') return; // Safety check
     
-    // Position bird based on screen dimensions - works for all aspect ratios
+    // Position box based on screen dimensions - works for all aspect ratios
     bird.x = canvas.width * 0.25; // 25% from left edge
     bird.y = canvas.height / 2;
     
-    // Size bird proportionally to screen size but with reasonable bounds
+    // Size box proportionally to screen size but with reasonable bounds (square)
     const minDimension = Math.min(canvas.width, canvas.height);
-    bird.width = Math.max(minDimension * 0.04, 25);
-    bird.height = Math.max(minDimension * 0.03, 20);
+    const boxSize = Math.max(minDimension * 0.04, 25);
+    bird.width = boxSize;
+    bird.height = boxSize; // Make it square
     
     // Physics scaled to screen height for consistency
     bird.gravity = Math.max(canvas.height * 0.0008, 0.3);
@@ -351,26 +356,17 @@ function displayStartScreen() {
     // Increment animation timer
     startScreenAnimation++;
     
-    // Animated gradient background overlay
+    // Simple gradient background overlay
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, 'rgba(135, 206, 235, 0.8)');
     gradient.addColorStop(1, 'rgba(152, 251, 152, 0.8)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Title animation with floating effect
-    const titleFloat = Math.sin(startScreenAnimation * 0.05) * 10;
-    const titleScale = 1 + Math.sin(startScreenAnimation * 0.03) * 0.05;
-    
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 3 + titleFloat);
-    ctx.scale(titleScale, titleScale);
-    
-    // Title glow effect
+    // Static title (no animation)
     ctx.shadowColor = '#FFD700';
     ctx.shadowBlur = 20;
     
-    // Main title
     const titleSize = Math.max(canvas.width * 0.08, 32);
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold ' + titleSize + 'px Arial';
@@ -378,50 +374,52 @@ function displayStartScreen() {
     ctx.strokeStyle = '#FF6B35';
     ctx.lineWidth = 4;
     
-    const titleText = 'FLAPPY BIRD';
-    ctx.strokeText(titleText, 0, 0);
-    ctx.fillText(titleText, 0, 0);
-    ctx.restore();
+    const titleText = 'FLAPPY BOX';
+    ctx.strokeText(titleText, canvas.width / 2, canvas.height / 3);
+    ctx.fillText(titleText, canvas.width / 2, canvas.height / 3);
     
-    // Subtitle with fade animation
-    const subtitleFade = (Math.sin(startScreenAnimation * 0.08) + 1) / 2;
-    ctx.fillStyle = `rgba(255, 255, 255, ${subtitleFade})`;
+    // Static subtitle (no animation)
+    ctx.fillStyle = 'white';
     ctx.font = (Math.max(canvas.width * 0.03, 16)) + 'px Arial';
-    ctx.textAlign = 'center';
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 2;
     
-    const subtitleText = 'Get Ready to Fly!';
-    ctx.strokeText(subtitleText, canvas.width / 2, canvas.height / 3 + 60);
-    ctx.fillText(subtitleText, canvas.width / 2, canvas.height / 3 + 60);
+    const subtitleText = 'Get Ready to Jump!';
+    ctx.strokeText(subtitleText, canvas.width / 2, canvas.height / 3 + 50);
+    ctx.fillText(subtitleText, canvas.width / 2, canvas.height / 3 + 50);
     
-    // Animated bird preview
-    const birdPreviewX = canvas.width / 2 + Math.sin(startScreenAnimation * 0.1) * 30;
-    const birdPreviewY = canvas.height / 2;
-    const birdSize = 40;
+    // Animated box preview (only animated element)
+    const boxX = canvas.width / 2;
+    const boxY = canvas.height / 2 + Math.sin(startScreenAnimation * 0.08) * 15;
+    const boxSize = 50;
     
-    // Bird with wing flap animation
+    // Animated box with bounce effect
     ctx.fillStyle = '#FFD700';
-    const wingFlap = Math.sin(startScreenAnimation * 0.3) * 5;
-    ctx.fillRect(birdPreviewX - birdSize/2, birdPreviewY - birdSize/2 + wingFlap, birdSize, birdSize/2);
-    ctx.fillRect(birdPreviewX - birdSize/4, birdPreviewY - birdSize/4, birdSize/2, birdSize/2);
+    ctx.strokeStyle = '#FF6B35';
+    ctx.lineWidth = 3;
+    ctx.fillRect(boxX - boxSize/2, boxY - boxSize/2, boxSize, boxSize);
+    ctx.strokeRect(boxX - boxSize/2, boxY - boxSize/2, boxSize, boxSize);
     
-    // Instructions with pulsing effect
-    const instructionPulse = 0.8 + Math.sin(startScreenAnimation * 0.15) * 0.2;
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height * 0.75);
-    ctx.scale(instructionPulse, instructionPulse);
+    // Start button
+    const buttonWidth = Math.max(canvas.width * 0.3, 200);
+    const buttonHeight = Math.max(canvas.height * 0.08, 50);
+    const buttonX = canvas.width / 2 - buttonWidth / 2;
+    const buttonY = canvas.height * 0.7;
     
-    ctx.fillStyle = 'white';
+    // Button background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 3;
+    ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+    ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
+    
+    // Button text
+    ctx.fillStyle = '#333';
     ctx.font = 'bold ' + (Math.max(canvas.width * 0.025, 18)) + 'px Arial';
     ctx.textAlign = 'center';
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 3;
     
-    const instructionText = 'Tap Anywhere or Press Space to Start';
-    ctx.strokeText(instructionText, 0, 0);
-    ctx.fillText(instructionText, 0, 0);
-    ctx.restore();
+    const buttonText = 'TAP TO START';
+    ctx.fillText(buttonText, canvas.width / 2, buttonY + buttonHeight/2 + 6);
     
     // Reset styles
     ctx.textAlign = 'left';
