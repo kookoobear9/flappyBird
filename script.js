@@ -38,6 +38,7 @@ const minPipeInterval = 45; // Minimum pipe interval (maximum frequency)
 const basePipeSpacing = 180; // Fixed pipe spacing - doesn't change with difficulty
 
 //Variable Initializations
+let gameState = 'start'; // 'start', 'playing', 'gameOver'
 let isGameStarted = false;
 let isGameOver = false; 
 let currentSpeed = baseSpeed; 
@@ -45,6 +46,10 @@ let pipeInterval = pipeIntervalBase;
 let lastPipeYTop = canvas.height / 2; 
 let frameCount = 0; 
 let score = 0;
+let displayScore = 0; // For smooth score animation
+let scoreAnimation = 0; // Animation timer
+let gameOverAnimation = 0; // Game over animation timer
+let startScreenAnimation = 0; // Start screen animation timer
 
 
 //Game Objects
@@ -125,14 +130,19 @@ function gameLoop() {
         }
     }
 
-    // Always render everything (background to foreground order)
-    renderBird();
-    pipes.forEach(pipe => renderPipe(pipe));
-    displayScore();
-    
-    // Render game over on top of everything else
-    if(isGameStarted && isGameOver === true) {
-        displayGameOver();
+    // Render based on game state
+    if (gameState === 'start') {
+        displayStartScreen();
+    } else {
+        // Always render everything (background to foreground order)
+        renderBird();
+        pipes.forEach(pipe => renderPipe(pipe));
+        displayScore();
+        
+        // Render game over on top of everything else
+        if(gameState === 'gameOver') {
+            displayGameOver();
+        }
     }
     
     requestAnimationFrame(gameLoop);
@@ -178,6 +188,7 @@ function updateScore() {
         if (pipe.x + pipe.width < bird.x && !pipe.passed) {
             pipe.passed = true;
             score++; 
+            scoreAnimation = 30; // Trigger score animation
             console.log("Score increased:", score);
 
             // Progressive difficulty increase every 3 points
@@ -198,10 +209,21 @@ function updateScore() {
             }
         }
     });
+    
+    // Smooth score animation
+    if (displayScore < score) {
+        displayScore += 0.1;
+        if (displayScore > score) displayScore = score;
+    }
+    
+    // Update animation timers
+    if (scoreAnimation > 0) scoreAnimation--;
 }
 
 function gameOver() {
     isGameOver = true;
+    gameState = 'gameOver';
+    gameOverAnimation = 0; // Reset animation
 }
 
 function renderBird() {
@@ -221,35 +243,91 @@ function renderPipe(pipe) {
 
 function displayScore() {
     const fontSize = Math.max(canvas.width * 0.03, 16);
-    ctx.fillStyle = "black";
-    ctx.font = fontSize + "px Arial";
-    ctx.fillText("Score: " + score, canvas.width * 0.02, fontSize + 10);
     
-    if (!isGameStarted && !isGameOver) {
-        const instructionSize = Math.max(canvas.width * 0.025, 14);
-        ctx.font = instructionSize + "px Arial";
-        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-        const instructions = "Tap Anywhere or Press Space to Start";
-        const textWidth = ctx.measureText(instructions).width;
-        ctx.fillText(instructions, (canvas.width - textWidth) / 2, canvas.height / 2 + 50);
+    // Animated score with glow effect when score increases
+    if (scoreAnimation > 0) {
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#FFD700';
+        const animScale = 1 + (scoreAnimation / 30) * 0.3;
+        ctx.font = (fontSize * animScale) + "px Arial";
+    } else {
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "white";
+        ctx.font = fontSize + "px Arial";
     }
+    
+    // Add text stroke for better visibility
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 3;
+    ctx.strokeText("Score: " + Math.floor(displayScore), canvas.width * 0.02, fontSize + 10);
+    ctx.fillText("Score: " + Math.floor(displayScore), canvas.width * 0.02, fontSize + 10);
+    
+    // Reset shadow
+    ctx.shadowBlur = 0;
 }
 
 function displayGameOver() {
+    // Increment animation timer
+    gameOverAnimation++;
+    
+    // Semi-transparent overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     const fontSize = Math.max(canvas.width * 0.05, 24);
     const restartSize = Math.max(canvas.width * 0.03, 16);
     
-    ctx.fillStyle = "red";
-    ctx.font = fontSize + "px Arial";
-    const gameOverText = "Game Over";
-    const gameOverWidth = ctx.measureText(gameOverText).width;
-    ctx.fillText(gameOverText, (canvas.width - gameOverWidth) / 2, canvas.height / 2);
+    // Animated game over text with bounce effect
+    const bounceScale = 1 + Math.sin(gameOverAnimation * 0.1) * 0.1;
+    const slideIn = Math.min(gameOverAnimation / 30, 1);
     
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-    ctx.font = restartSize + "px Arial";
-    const restartText = "Tap Anywhere or Press Space to Restart";
-    const restartWidth = ctx.measureText(restartText).width;
-    ctx.fillText(restartText, (canvas.width - restartWidth) / 2, canvas.height / 2 + 40);
+    // Game Over title with glow and animation
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2 - 50);
+    ctx.scale(bounceScale * slideIn, bounceScale * slideIn);
+    
+    // Glow effect
+    ctx.shadowColor = '#FF4444';
+    ctx.shadowBlur = 20;
+    
+    ctx.fillStyle = '#FF4444';
+    ctx.font = 'bold ' + fontSize + 'px Arial';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 3;
+    
+    const gameOverText = 'GAME OVER';
+    ctx.strokeText(gameOverText, 0, 0);
+    ctx.fillText(gameOverText, 0, 0);
+    ctx.restore();
+    
+    // Final score display
+    if (slideIn >= 1) {
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold ' + (restartSize * 1.2) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        
+        const finalScoreText = 'Final Score: ' + score;
+        ctx.strokeText(finalScoreText, canvas.width / 2, canvas.height / 2 + 20);
+        ctx.fillText(finalScoreText, canvas.width / 2, canvas.height / 2 + 20);
+        
+        // Restart instructions with fade in
+        const fadeIn = Math.min((gameOverAnimation - 30) / 30, 1);
+        if (fadeIn > 0) {
+            ctx.fillStyle = `rgba(200, 200, 200, ${fadeIn})`;
+            ctx.font = restartSize + 'px Arial';
+            const restartText = 'Tap Anywhere or Press Space to Restart';
+            ctx.strokeText(restartText, canvas.width / 2, canvas.height / 2 + 80);
+            ctx.fillText(restartText, canvas.width / 2, canvas.height / 2 + 80);
+        }
+    }
+    
+    // Reset text alignment
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 0;
 }
 
 function resetBirdPosition() {
@@ -269,28 +347,115 @@ function resetBirdPosition() {
     bird.jumpStrength = -Math.max(canvas.height * 0.012, 6);
 }
 
+function displayStartScreen() {
+    // Increment animation timer
+    startScreenAnimation++;
+    
+    // Animated gradient background overlay
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(135, 206, 235, 0.8)');
+    gradient.addColorStop(1, 'rgba(152, 251, 152, 0.8)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Title animation with floating effect
+    const titleFloat = Math.sin(startScreenAnimation * 0.05) * 10;
+    const titleScale = 1 + Math.sin(startScreenAnimation * 0.03) * 0.05;
+    
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 3 + titleFloat);
+    ctx.scale(titleScale, titleScale);
+    
+    // Title glow effect
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 20;
+    
+    // Main title
+    const titleSize = Math.max(canvas.width * 0.08, 32);
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold ' + titleSize + 'px Arial';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#FF6B35';
+    ctx.lineWidth = 4;
+    
+    const titleText = 'FLAPPY BIRD';
+    ctx.strokeText(titleText, 0, 0);
+    ctx.fillText(titleText, 0, 0);
+    ctx.restore();
+    
+    // Subtitle with fade animation
+    const subtitleFade = (Math.sin(startScreenAnimation * 0.08) + 1) / 2;
+    ctx.fillStyle = `rgba(255, 255, 255, ${subtitleFade})`;
+    ctx.font = (Math.max(canvas.width * 0.03, 16)) + 'px Arial';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    
+    const subtitleText = 'Get Ready to Fly!';
+    ctx.strokeText(subtitleText, canvas.width / 2, canvas.height / 3 + 60);
+    ctx.fillText(subtitleText, canvas.width / 2, canvas.height / 3 + 60);
+    
+    // Animated bird preview
+    const birdPreviewX = canvas.width / 2 + Math.sin(startScreenAnimation * 0.1) * 30;
+    const birdPreviewY = canvas.height / 2;
+    const birdSize = 40;
+    
+    // Bird with wing flap animation
+    ctx.fillStyle = '#FFD700';
+    const wingFlap = Math.sin(startScreenAnimation * 0.3) * 5;
+    ctx.fillRect(birdPreviewX - birdSize/2, birdPreviewY - birdSize/2 + wingFlap, birdSize, birdSize/2);
+    ctx.fillRect(birdPreviewX - birdSize/4, birdPreviewY - birdSize/4, birdSize/2, birdSize/2);
+    
+    // Instructions with pulsing effect
+    const instructionPulse = 0.8 + Math.sin(startScreenAnimation * 0.15) * 0.2;
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height * 0.75);
+    ctx.scale(instructionPulse, instructionPulse);
+    
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold ' + (Math.max(canvas.width * 0.025, 18)) + 'px Arial';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 3;
+    
+    const instructionText = 'Tap Anywhere or Press Space to Start';
+    ctx.strokeText(instructionText, 0, 0);
+    ctx.fillText(instructionText, 0, 0);
+    ctx.restore();
+    
+    // Reset styles
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 0;
+}
+
 function restartGame() {
     isGameOver = false;
     isGameStarted = false;
+    gameState = 'start';
     resetBirdPosition();
     bird.velocityY = 0; 
     pipes.length = 0; 
     score = 0; 
+    displayScore = 0;
     frameCount = 0; 
     currentSpeed = baseSpeed; 
     pipeInterval = pipeIntervalBase;
     lastPipeYTop = canvas.height / 2;
+    startScreenAnimation = 0;
+    gameOverAnimation = 0;
+    scoreAnimation = 0;
 }
 
 
 // Input handlers
 function handleInput() {
-    if (!isGameStarted) {
-        isGameStarted = true; 
+    if (gameState === 'start') {
+        isGameStarted = true;
+        gameState = 'playing';
         bird.jump(); 
-    } else if (isGameOver) {
+    } else if (gameState === 'gameOver') {
         restartGame(); 
-    } else {
+    } else if (gameState === 'playing') {
         bird.jump(); 
     }
 }
@@ -355,17 +520,13 @@ function initializeGame() {
     resetBirdPosition();
     setupControls();
     
-    // Start the game loop first
-    displayScore();
-    gameLoop();
+    // Set initial game state
+    gameState = 'start';
+    isGameStarted = false;
+    isGameOver = false;
     
-    // Generate pipes after a short delay to ensure canvas is ready
-    setTimeout(() => {
-        if (canvas.width > 0 && canvas.height > 0) {
-            pipes.push(new Pipe());
-            console.log('First pipe generated:', pipes[0]);
-        }
-    }, 500);
+    // Start the game loop
+    gameLoop();
 }
 
 // Wait for DOM to be ready
