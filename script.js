@@ -34,8 +34,7 @@ function resizeCanvas() {
     }
 }
 
-// Initial canvas setup
-resizeCanvas();
+// Initial canvas setup will be done in initializeGame()
 window.addEventListener('resize', resizeCanvas);
 
 
