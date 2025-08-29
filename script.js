@@ -46,7 +46,7 @@ let pipeInterval = pipeIntervalBase;
 let lastPipeYTop = canvas.height / 2; 
 let frameCount = 0; 
 let score = 0;
-let displayScore = 0; // For smooth score animation
+let animatedScore = 0; // For smooth score animation
 let scoreAnimation = 0; // Animation timer
 let gameOverAnimation = 0; // Game over animation timer
 let startScreenAnimation = 0; // Start screen animation timer
@@ -211,9 +211,9 @@ function updateScore() {
     });
     
     // Smooth score animation
-    if (displayScore < score) {
-        displayScore += 0.1;
-        if (displayScore > score) displayScore = score;
+    if (animatedScore < score) {
+        animatedScore += 0.1;
+        if (animatedScore > score) animatedScore = score;
     }
     
     // Update animation timers
@@ -260,8 +260,8 @@ function displayScore() {
     // Add text stroke for better visibility
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 3;
-    ctx.strokeText("Score: " + Math.floor(displayScore), canvas.width * 0.02, fontSize + 10);
-    ctx.fillText("Score: " + Math.floor(displayScore), canvas.width * 0.02, fontSize + 10);
+    ctx.strokeText("Score: " + Math.floor(animatedScore), canvas.width * 0.02, fontSize + 10);
+    ctx.fillText("Score: " + Math.floor(animatedScore), canvas.width * 0.02, fontSize + 10);
     
     // Reset shadow
     ctx.shadowBlur = 0;
@@ -436,7 +436,7 @@ function restartGame() {
     bird.velocityY = 0; 
     pipes.length = 0; 
     score = 0; 
-    displayScore = 0;
+    animatedScore = 0;
     frameCount = 0; 
     currentSpeed = baseSpeed; 
     pipeInterval = pipeIntervalBase;
