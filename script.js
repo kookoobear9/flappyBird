@@ -435,7 +435,10 @@ function restartGame() {
     pipes.length = 0; 
     score = 0; 
     animatedScore = 0;
-    frameCount = 0; 
+    frameCount = 0;
+    
+    // Recalculate speeds based on current screen size
+    calculateScreenBasedSpeed();
     currentSpeed = baseSpeed; 
     pipeInterval = pipeIntervalBase;
     lastPipeYTop = canvas.height / 2;
@@ -456,6 +459,27 @@ function handleInput() {
     } else if (gameState === 'playing') {
         bird.jump(); 
     }
+}
+
+function goHome() {
+    gameState = 'start';
+    isGameStarted = false;
+    isGameOver = false;
+    resetBirdPosition();
+    bird.velocityY = 0;
+    pipes.length = 0;
+    score = 0;
+    animatedScore = 0;
+    frameCount = 0;
+    
+    // Recalculate speeds based on current screen size
+    calculateScreenBasedSpeed();
+    currentSpeed = baseSpeed;
+    pipeInterval = pipeIntervalBase;
+    lastPipeYTop = canvas.height / 2;
+    startScreenAnimation = 0;
+    gameOverAnimation = 0;
+    scoreAnimation = 0;
 }
 
 // Keyboard controls
