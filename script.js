@@ -119,17 +119,16 @@ class Pipe {
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Always generate pipes (but only when game is started)
+    generatePipes();
+
     if(isGameStarted) {
         if (isGameOver === false) {
             bird.update();
             pipes.forEach(pipe => pipe.update());
 
             checkCollisions();
-
             updateScore();
-
-            renderBird();
-            pipes.forEach(pipe => renderPipe(pipe));
         }
 
         if (isGameOver === true) {
@@ -137,16 +136,22 @@ function gameLoop() {
         }
     }
 
+    // Always render everything
+    renderBird();
+    pipes.forEach(pipe => renderPipe(pipe));
     displayScore();
+    
     requestAnimationFrame(gameLoop);
-    generatePipes();
 }
 
 function generatePipes() {
-    frameCount++;
-    if (frameCount >= pipeInterval && isGameStarted && !isGameOver) {
-        pipes.push(new Pipe());
-        frameCount = 0;
+    if (isGameStarted && !isGameOver) {
+        frameCount++;
+        if (frameCount >= pipeInterval) {
+            pipes.push(new Pipe());
+            frameCount = 0;
+            console.log('New pipe generated, total pipes:', pipes.length);
+        }
     }
     
     // Clean up off-screen pipes
@@ -267,13 +272,6 @@ function restartGame() {
     currentSpeed = baseSpeed; 
     pipeInterval = pipeIntervalBase;
     lastPipeYTop = canvas.height / 2;
-    
-    // Generate first pipe immediately when game starts
-    setTimeout(() => {
-        if (isGameStarted && pipes.length === 0) {
-            pipes.push(new Pipe());
-        }
-    }, 1000); // Generate first pipe after 1 second
 }
 
 
@@ -335,12 +333,17 @@ function initializeGame() {
     resetBirdPosition();
     setupControls();
     
-    // Generate initial pipes
-    pipes.push(new Pipe());
-    setTimeout(() => pipes.push(new Pipe()), 2000);
-    
+    // Start the game loop first
     displayScore();
     gameLoop();
+    
+    // Generate pipes after a short delay to ensure canvas is ready
+    setTimeout(() => {
+        if (canvas.width > 0 && canvas.height > 0) {
+            pipes.push(new Pipe());
+            console.log('First pipe generated:', pipes[0]);
+        }
+    }, 500);
 }
 
 // Wait for DOM to be ready
