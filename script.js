@@ -41,9 +41,9 @@ window.addEventListener('resize', resizeCanvas);
 
 //Constant declarations 
 const pipes = [];
-const pipeIntervalBase = 60; // Slower initial pipe generation
-const baseSpeed = 2; // Slower initial speed
-const basePipeSpacing = 200; // Larger initial spacing
+const pipeIntervalBase = 90; // Start with reasonable pipe spacing
+const baseSpeed = 3; // Reasonable starting speed
+const basePipeSpacing = 180; // Good starting pipe gap
 
 //Variable Initializations
 let isGameStarted = false;
@@ -89,14 +89,18 @@ class Pipe {
     constructor() {
         this.x = canvas.width;
         
-        // Dynamic spacing based on score for progressive difficulty
-        const difficultyMultiplier = Math.max(1 - score * 0.02, 0.6); // Gets harder as score increases
-        this.spacing = Math.max(basePipeSpacing * difficultyMultiplier, Math.max(canvas.height * 0.25, 100));
-        this.width = Math.max(canvas.width * 0.08, 50);
+        // Progressive difficulty: spacing gets smaller as score increases
+        const difficultyFactor = Math.max(1 - score * 0.015, 0.7); // Gradual difficulty increase
+        this.spacing = basePipeSpacing * difficultyFactor;
+        this.width = Math.max(canvas.width * 0.08, 60);
         
-        const maxVariation = this.spacing * 0.5; // Reduced variation for easier gameplay
-        this.yTop = Math.max(lastPipeYTop - maxVariation, 50) + Math.random() * maxVariation * 2;
-        this.yTop = Math.min(this.yTop, canvas.height - this.spacing - 50);
+        // Reasonable pipe positioning with some variation
+        const maxVariation = Math.min(this.spacing * 0.4, 80);
+        const minTop = 50;
+        const maxTop = canvas.height - this.spacing - 50;
+        
+        this.yTop = Math.max(minTop, Math.min(maxTop, 
+            lastPipeYTop + (Math.random() - 0.5) * maxVariation));
         this.yBottom = this.yTop + this.spacing;
         
         this.speed = currentSpeed;
@@ -140,7 +144,7 @@ function gameLoop() {
 
 function generatePipes() {
     frameCount++;
-    if (frameCount >= pipeInterval && !isGameOver) {
+    if (frameCount >= pipeInterval && isGameStarted && !isGameOver) {
         pipes.push(new Pipe());
         frameCount = 0;
     }
@@ -177,14 +181,14 @@ function updateScore() {
             score++; 
             console.log("Score increased:", score);
 
-            // Gradual difficulty increase every 3 points instead of 10
-            if (score % 3 === 0) {
-                // Gradually increase speed (slower progression)
-                currentSpeed += 0.3;
-                // Gradually decrease pipe interval (spawn pipes more frequently)
-                pipeInterval = Math.max(pipeInterval - 1, 25);
-                // Gradually increase gravity for more challenge
-                bird.gravity = Math.min(bird.gravity + 0.02, Math.max(canvas.height * 0.002, 0.8));
+            // Gradual difficulty increase every 5 points
+            if (score % 5 === 0 && score > 0) {
+                // Gradually increase speed
+                currentSpeed += 0.5;
+                // Spawn pipes more frequently
+                pipeInterval = Math.max(pipeInterval - 3, 60);
+                // Slightly increase gravity
+                bird.gravity = Math.min(bird.gravity + 0.01, canvas.height * 0.0025);
             }
         }
     });
@@ -262,7 +266,14 @@ function restartGame() {
     frameCount = 0; 
     currentSpeed = baseSpeed; 
     pipeInterval = pipeIntervalBase;
-    lastPipeYTop = canvas.height / 2; 
+    lastPipeYTop = canvas.height / 2;
+    
+    // Generate first pipe immediately when game starts
+    setTimeout(() => {
+        if (isGameStarted && pipes.length === 0) {
+            pipes.push(new Pipe());
+        }
+    }, 1000); // Generate first pipe after 1 second
 }
 
 
@@ -323,7 +334,11 @@ function initializeGame() {
     resizeCanvas();
     resetBirdPosition();
     setupControls();
-    generatePipes();
+    
+    // Generate initial pipes
+    pipes.push(new Pipe());
+    setTimeout(() => pipes.push(new Pipe()), 2000);
+    
     displayScore();
     gameLoop();
 }
