@@ -1,24 +1,15 @@
 const canvas = document.querySelector(".gameCanvas"); 
 const ctx = canvas.getContext("2d");
 
-// Responsive canvas setup
+// Full-screen responsive canvas setup
 function resizeCanvas() {
     const container = document.getElementById('gameContainer');
-    const padding = 10;
-    const maxWidth = Math.min(window.innerWidth - padding, 800);
-    const maxHeight = Math.min(window.innerHeight - padding, 600);
     
-    // Maintain 4:3 aspect ratio
-    const aspectRatio = 4/3;
-    let width = maxWidth;
-    let height = width / aspectRatio;
+    // Use entire viewport dimensions
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     
-    if (height > maxHeight) {
-        height = maxHeight;
-        width = height * aspectRatio;
-    }
-    
-    // Set actual canvas dimensions
+    // Set actual canvas dimensions to full viewport
     canvas.width = width;
     canvas.height = height;
     
@@ -90,14 +81,16 @@ class Pipe {
     constructor() {
         this.x = canvas.width;
         
-        // Fixed pipe spacing - difficulty comes from speed and frequency, not spacing
-        this.spacing = basePipeSpacing;
-        this.width = Math.max(canvas.width * 0.08, 60);
+        // Scale pipe spacing based on screen height for consistency across devices
+        this.spacing = Math.max(canvas.height * 0.25, 120); // 25% of screen height minimum
         
-        // Reasonable pipe positioning with some variation
-        const maxVariation = Math.min(this.spacing * 0.4, 80);
-        const minTop = 50;
-        const maxTop = canvas.height - this.spacing - 50;
+        // Scale pipe width based on screen width but keep reasonable bounds
+        this.width = Math.max(canvas.width * 0.06, Math.min(canvas.width * 0.12, 80));
+        
+        // Reasonable pipe positioning with variation scaled to spacing
+        const maxVariation = Math.min(this.spacing * 0.4, canvas.height * 0.15);
+        const minTop = canvas.height * 0.1; // 10% from top
+        const maxTop = canvas.height - this.spacing - canvas.height * 0.1; // 10% from bottom
         
         this.yTop = Math.max(minTop, Math.min(maxTop, 
             lastPipeYTop + (Math.random() - 0.5) * maxVariation));
@@ -259,13 +252,20 @@ function displayGameOver() {
 }
 
 function resetBirdPosition() {
-    bird.x = canvas.width / 4;
+    if (typeof bird === 'undefined') return; // Safety check
+    
+    // Position bird based on screen dimensions - works for all aspect ratios
+    bird.x = canvas.width * 0.25; // 25% from left edge
     bird.y = canvas.height / 2;
-    bird.width = Math.max(canvas.width * 0.05, 20);
-    bird.height = Math.max(canvas.height * 0.05, 15);
-    // Easier starting physics
-    bird.gravity = Math.max(canvas.height * 0.001, 0.3);
-    bird.jumpStrength = -Math.max(canvas.height * 0.015, 6);
+    
+    // Size bird proportionally to screen size but with reasonable bounds
+    const minDimension = Math.min(canvas.width, canvas.height);
+    bird.width = Math.max(minDimension * 0.04, 25);
+    bird.height = Math.max(minDimension * 0.03, 20);
+    
+    // Physics scaled to screen height for consistency
+    bird.gravity = Math.max(canvas.height * 0.0008, 0.3);
+    bird.jumpStrength = -Math.max(canvas.height * 0.012, 6);
 }
 
 function restartGame() {
