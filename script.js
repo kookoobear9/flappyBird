@@ -91,7 +91,7 @@ class Pipe {
         
         // Progressive difficulty: spacing gets smaller as score increases
         const difficultyFactor = Math.max(1 - score * 0.015, 0.7); // Gradual difficulty increase
-        this.spacing = basePipeSpacing * difficultyFactor;
+        this.spacing = 180 * difficultyFactor; // Use fixed value to avoid reference error
         this.width = Math.max(canvas.width * 0.08, 60);
         
         // Reasonable pipe positioning with some variation
