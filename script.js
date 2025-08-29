@@ -41,8 +41,9 @@ window.addEventListener('resize', resizeCanvas);
 
 //Constant declarations 
 const pipes = [];
-const pipeIntervalBase = 40; 
-const baseSpeed = 4;
+const pipeIntervalBase = 60; // Slower initial pipe generation
+const baseSpeed = 2; // Slower initial speed
+const basePipeSpacing = 200; // Larger initial spacing
 
 //Variable Initializations
 let isGameStarted = false;
@@ -176,9 +177,14 @@ function updateScore() {
             score++; 
             console.log("Score increased:", score);
 
-            if (score % 10 === 0) {
-                currentSpeed += 1.5; 
-                pipeInterval = Math.max(pipeInterval - 2, 20);
+            // Gradual difficulty increase every 3 points instead of 10
+            if (score % 3 === 0) {
+                // Gradually increase speed (slower progression)
+                currentSpeed += 0.3;
+                // Gradually decrease pipe interval (spawn pipes more frequently)
+                pipeInterval = Math.max(pipeInterval - 1, 25);
+                // Gradually increase gravity for more challenge
+                bird.gravity = Math.min(bird.gravity + 0.02, Math.max(canvas.height * 0.002, 0.8));
             }
         }
     });
