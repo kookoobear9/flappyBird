@@ -123,16 +123,17 @@ function gameLoop() {
             checkCollisions();
             updateScore();
         }
-
-        if (isGameOver === true) {
-            displayGameOver();
-        }
     }
 
-    // Always render everything
+    // Always render everything (background to foreground order)
     renderBird();
     pipes.forEach(pipe => renderPipe(pipe));
     displayScore();
+    
+    // Render game over on top of everything else
+    if(isGameStarted && isGameOver === true) {
+        displayGameOver();
+    }
     
     requestAnimationFrame(gameLoop);
 }
