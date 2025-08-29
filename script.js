@@ -43,7 +43,7 @@ window.addEventListener('resize', resizeCanvas);
 const pipes = [];
 const pipeIntervalBase = 90; // Start with reasonable pipe spacing
 const baseSpeed = 3; // Reasonable starting speed
-const basePipeSpacing = 180; // Good starting pipe gap
+// Removed basePipeSpacing constant - now using direct value in Pipe class
 
 //Variable Initializations
 let isGameStarted = false;
