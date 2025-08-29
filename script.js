@@ -43,7 +43,9 @@ window.addEventListener('resize', resizeCanvas);
 const pipes = [];
 const pipeIntervalBase = 90; // Start with reasonable pipe spacing
 const baseSpeed = 3; // Reasonable starting speed
-// Removed basePipeSpacing constant - now using direct value in Pipe class
+const maxSpeed = 7; // Maximum speed cap for playability
+const minPipeInterval = 45; // Minimum pipe interval (maximum frequency)
+const basePipeSpacing = 180; // Fixed pipe spacing - doesn't change with difficulty
 
 //Variable Initializations
 let isGameStarted = false;
@@ -89,9 +91,8 @@ class Pipe {
     constructor() {
         this.x = canvas.width;
         
-        // Progressive difficulty: spacing gets smaller as score increases
-        const difficultyFactor = Math.max(1 - score * 0.015, 0.7); // Gradual difficulty increase
-        this.spacing = 180 * difficultyFactor; // Use fixed value to avoid reference error
+        // Fixed pipe spacing - difficulty comes from speed and frequency, not spacing
+        this.spacing = basePipeSpacing;
         this.width = Math.max(canvas.width * 0.08, 60);
         
         // Reasonable pipe positioning with some variation
@@ -186,14 +187,21 @@ function updateScore() {
             score++; 
             console.log("Score increased:", score);
 
-            // Gradual difficulty increase every 5 points
-            if (score % 5 === 0 && score > 0) {
-                // Gradually increase speed
-                currentSpeed += 0.5;
-                // Spawn pipes more frequently
-                pipeInterval = Math.max(pipeInterval - 3, 60);
-                // Slightly increase gravity
-                bird.gravity = Math.min(bird.gravity + 0.01, canvas.height * 0.0025);
+            // Progressive difficulty increase every 3 points
+            if (score % 3 === 0 && score > 0) {
+                // Increase speed gradually but cap at maximum
+                currentSpeed = Math.min(currentSpeed + 0.4, maxSpeed);
+                
+                // Increase pipe frequency (decrease interval) but cap at minimum
+                pipeInterval = Math.max(pipeInterval - 2, minPipeInterval);
+                
+                // Log difficulty progression for debugging
+                console.log(`Difficulty increased at score ${score}: speed=${currentSpeed.toFixed(1)}, interval=${pipeInterval}`);
+                
+                // Check if max difficulty reached
+                if (currentSpeed >= maxSpeed && pipeInterval <= minPipeInterval) {
+                    console.log('Maximum difficulty reached!');
+                }
             }
         }
     });
