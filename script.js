@@ -235,7 +235,7 @@ function displayScore() {
         const instructionSize = Math.max(canvas.width * 0.025, 14);
         ctx.font = instructionSize + "px Arial";
         ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-        const instructions = "Tap or Press Space to Start";
+        const instructions = "Tap Anywhere or Press Space to Start";
         const textWidth = ctx.measureText(instructions).width;
         ctx.fillText(instructions, (canvas.width - textWidth) / 2, canvas.height / 2 + 50);
     }
@@ -253,7 +253,7 @@ function displayGameOver() {
     
     ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
     ctx.font = restartSize + "px Arial";
-    const restartText = "Tap or Press Space to Restart";
+    const restartText = "Tap Anywhere or Press Space to Restart";
     const restartWidth = ctx.measureText(restartText).width;
     ctx.fillText(restartText, (canvas.width - restartWidth) / 2, canvas.height / 2 + 40);
 }
@@ -322,12 +322,26 @@ function setupControls() {
         handleInput();
     }, { passive: false });
     
-    // Prevent page scrolling when touching game area
-    container.addEventListener("touchmove", (event) => {
+    // Add touch controls to entire webpage for mobile - tap anywhere to play
+    document.body.addEventListener("touchstart", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        handleInput();
+    }, { passive: false });
+    
+    // Also add to document for full coverage
+    document.addEventListener("touchstart", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        handleInput();
+    }, { passive: false });
+    
+    // Prevent page scrolling anywhere on mobile
+    document.addEventListener("touchmove", (event) => {
         event.preventDefault();
     }, { passive: false });
     
-    container.addEventListener("touchend", (event) => {
+    document.addEventListener("touchend", (event) => {
         event.preventDefault();
     }, { passive: false });
 }
