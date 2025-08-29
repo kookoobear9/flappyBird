@@ -463,18 +463,83 @@ document.addEventListener("keydown", event => {
     if (event.code === "Space" || event.code === "Enter" || event.code === "ArrowUp") {
         event.preventDefault();
         handleInput();
+    } else if (event.code === "KeyH" && gameState === 'gameOver') {
+        event.preventDefault();
+        goHome();
     }
 });
 
 // Input controls setup
 function setupControls() {
     // Mouse/Touch controls - improved mobile support
-    canvas.addEventListener("click", handleInput);
+    canvas.addEventListener("click", (event) => {
+        if (gameState === 'gameOver') {
+            // Get click position
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+            
+            // Button dimensions (same as in displayGameOver)
+            const buttonWidth = Math.max(canvas.width * 0.25, 150);
+            const buttonHeight = Math.max(canvas.height * 0.06, 40);
+            const buttonY = canvas.height / 2 + 60;
+            const spacing = 20;
+            
+            // Play Again button bounds
+            const playButtonX = canvas.width / 2 - buttonWidth - spacing/2;
+            if (clickX >= playButtonX && clickX <= playButtonX + buttonWidth &&
+                clickY >= buttonY && clickY <= buttonY + buttonHeight) {
+                restartGame();
+                return;
+            }
+            
+            // Home button bounds
+            const homeButtonX = canvas.width / 2 + spacing/2;
+            if (clickX >= homeButtonX && clickX <= homeButtonX + buttonWidth &&
+                clickY >= buttonY && clickY <= buttonY + buttonHeight) {
+                goHome();
+                return;
+            }
+        }
+        
+        // Default click behavior for other states
+        handleInput();
+    });
     
     // Touch events with better mobile compatibility
     canvas.addEventListener("touchstart", (event) => {
         event.preventDefault();
         event.stopPropagation();
+        
+        if (gameState === 'gameOver' && event.touches.length > 0) {
+            // Get touch position
+            const rect = canvas.getBoundingClientRect();
+            const touchX = event.touches[0].clientX - rect.left;
+            const touchY = event.touches[0].clientY - rect.top;
+            
+            // Button dimensions (same as in displayGameOver)
+            const buttonWidth = Math.max(canvas.width * 0.25, 150);
+            const buttonHeight = Math.max(canvas.height * 0.06, 40);
+            const buttonY = canvas.height / 2 + 60;
+            const spacing = 20;
+            
+            // Play Again button bounds
+            const playButtonX = canvas.width / 2 - buttonWidth - spacing/2;
+            if (touchX >= playButtonX && touchX <= playButtonX + buttonWidth &&
+                touchY >= buttonY && touchY <= buttonY + buttonHeight) {
+                restartGame();
+                return;
+            }
+            
+            // Home button bounds
+            const homeButtonX = canvas.width / 2 + spacing/2;
+            if (touchX >= homeButtonX && touchX <= homeButtonX + buttonWidth &&
+                touchY >= buttonY && touchY <= buttonY + buttonHeight) {
+                goHome();
+                return;
+            }
+        }
+        
         handleInput();
     }, { passive: false });
     
